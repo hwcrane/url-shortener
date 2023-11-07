@@ -6,29 +6,31 @@ import (
 	"url-shortener/database"
 )
 
-// HandelShorten is the handler for shortening a URL
+// HandelShorten is the handler for shortening a URL.
 func HandelShorten(w http.ResponseWriter, r *http.Request) {
-	// Only works for post requests
+	// Only allow POST requests for shortening a URL.
 	if r.Method != http.MethodPost {
 		http.Error(w, "Invalid request method", http.StatusMethodNotAllowed)
 		return
 	}
 
-	// Retrieve the url
+	// Retrieve the original URL from the request form.
 	originalUrl := r.FormValue("url")
+
+	// Check if the URL parameter is missing in the form.
 	if originalUrl == "" {
 		http.Error(w, "URL parameter is missing", http.StatusBadRequest)
 		return
 	}
 
-	// Generate the new key and assign it
+	// Generate a new short key and associate it with the original URL in the database.
 	shortKey := database.GenerateShortKey()
 	database.AddKey(originalUrl, shortKey)
 
-	// The new shortened URL
+	// Construct the shortened URL with the generated short key.
 	shortenedURL := fmt.Sprintf("http://localhost:8080/short/%s", shortKey)
 
-	// Return a html page with the new shortened URL in it
+	// Return an HTML page with information about the original and shortened URLs.
 	w.Header().Set("Content-Type", "text/html")
 	responseHTML := fmt.Sprintf(`
 	<h2>URL Shortener</h2>
@@ -39,5 +41,7 @@ func HandelShorten(w http.ResponseWriter, r *http.Request) {
 	<input type="submit" value="Shorten">
 	</form>`, originalUrl, shortenedURL, shortenedURL,
 	)
+
+	// Write the HTML response to the client.
 	fmt.Fprintf(w, responseHTML)
 }
